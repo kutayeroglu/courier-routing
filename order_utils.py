@@ -18,13 +18,28 @@ def assign_order_to_courier(order_list, courier):
         # Find the nearest unassigned order
         unassigned_orders = [order for order in order_list if not order.assigned]
         if unassigned_orders:
-            # Sort orders by Manhattan distance
-            unassigned_orders.sort(key=lambda o: manhattan_distance(courier.location, o.origin))
+            # Shuffle to randomize order among identical sorting keys
+            random.shuffle(unassigned_orders)
+            
+            # Define a sort key that prioritizes:
+            # 1. Distance from courier to order origin
+            # 2. Distance from order origin to destination
+            unassigned_orders.sort(
+                key=lambda o: (
+                    manhattan_distance(courier.location, o.origin),
+                    manhattan_distance(o.origin, o.destination)
+                )
+            )
+
+            # Select the nearest order based on the defined priority
             nearest_order = unassigned_orders[0]
+
+            # Assign the order to the courier
             courier.current_order = nearest_order
             nearest_order.assigned = True
             courier.is_busy = True
             nearest_order.status = 'assigned'
+            
             print(f"Courier at {courier.location} assigned to order {nearest_order.origin} -> {nearest_order.destination}")
 
 
