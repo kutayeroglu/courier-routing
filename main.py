@@ -1,11 +1,11 @@
 import numpy as np
 import random
 
-from .constants import simulation_parameters, num_orders
-from .courier import Courier
-from .order_utils import generate_orders
-from .qlearning import q_learning
-from .simulation_utils import simulate_couriers
+from constants import simulation_parameters, num_orders
+from courier import Courier
+from order_utils import generate_orders
+from qlearning import q_learning
+from simulation_utils import simulate_couriers
 
 # Set random seed for reproducibility
 random.seed(42)

@@ -1,3 +1,2 @@
 courier-routing-venv/
-papers/
-presentations/
+__pycache__/

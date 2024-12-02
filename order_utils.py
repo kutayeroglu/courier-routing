@@ -1,4 +1,7 @@
-from .helpers import manhattan_distance
+import random
+
+from helpers import manhattan_distance
+from order import Order
 
 def assign_order_to_courier(order_list, courier):
     """
@@ -89,3 +92,24 @@ def update_order_patience(order_list, m):
         order_list.remove(order)  # Remove from the system
 
     return timed_out_count
+
+def generate_orders(num_orders, grid_length, patience=10):
+    """
+    Generates a specified number of orders with random origins and destinations.
+
+    Parameters:
+    - num_orders (int): Number of orders to generate.
+    - grid_length (int): Length of the grid (assuming square grid).
+    - patience (int): Patience duration for each order.
+
+    Returns:
+    - orders (list): List of generated Order objects.
+    """
+    orders = []
+    for _ in range(num_orders):
+        origin = (random.randint(0, grid_length - 1), random.randint(0, grid_length - 1))
+        destination = (random.randint(0, grid_length - 1), random.randint(0, grid_length - 1))
+        while destination == origin:
+            destination = (random.randint(0, grid_length - 1), random.randint(0, grid_length - 1))
+        orders.append(Order(origin=origin, destination=destination, patience=patience))
+    return orders

@@ -1,5 +1,5 @@
 import random
-from .constants import actions
+from constants import actions
 
 # Select an action based on epsilon-greedy policy
 def epsilon_greedy(state, q_table, epsilon):

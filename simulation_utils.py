@@ -1,8 +1,8 @@
 import random
-from .order import Order
-from .order_utils import process_orders, update_order_patience
-from .policy import epsilon_greedy
-from .action import take_action
+from order import Order
+from order_utils import process_orders, update_order_patience
+from policy import epsilon_greedy
+from action import take_action
 
 
 def generate_orders(num_orders, grid_length, patience=10):
