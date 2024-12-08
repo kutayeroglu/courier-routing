@@ -7,7 +7,7 @@ from utils.general_utils import plot_and_save_graphs
 from utils.order_utils import process_orders, update_order_patience
 
 
-def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episodes=1000, grid_size=5, m=5, num_couriers=1, courier_name='Courier'):
+def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episodes=1000, grid_size=5, m=5, num_couriers=1, learning_rate=0.1):
     '''
     Trains a courier agent using the Q-learning algorithm.
 
@@ -64,10 +64,11 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
             # Execute the action and observe the next state and reward
             next_state, reward = take_action(courier, action, order_list, m, grid_size)
 
-            # Update Q-value using Bellman equation
+            # Update Q-value using Bellman equation with learning rate
             future_q_values = [q_table.get((next_state, a), 0) for a in actions]
             future_q_value = max(future_q_values) if future_q_values else 0
-            new_q_value = reward + gamma * future_q_value
+            current_q = q_table.get((state, action), 0)
+            new_q_value = (1 - learning_rate) * current_q + learning_rate * (reward + gamma * future_q_value)
 
             # Update the Q-table
             q_table[(state, action)] = round(new_q_value, 2)
