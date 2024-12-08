@@ -33,7 +33,7 @@ def main_simulation():
     logger.info("Starting the simulation.")
 
 
-    for grid_size_total, num_couriers in simulation_parameters:
+    for grid_size_total, num_couriers, episode_number in simulation_parameters:
         # TODO: Remove after validating single courier simulation
         if num_couriers > 1: 
             break
@@ -64,7 +64,7 @@ def main_simulation():
             q_table,
             gamma=0.9,
             epsilon=0.1,
-            max_episodes=100,
+            max_episodes=episode_number,
             grid_size=grid_length,
             m=m
         )
