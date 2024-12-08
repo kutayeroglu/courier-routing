@@ -1,8 +1,8 @@
-from order_utils import process_orders
-from policy import epsilon_greedy
-from action import take_action
+from utils.order_utils import process_orders
+from learning.policy import epsilon_greedy
+from core.action import take_action
 from constants import actions
-from order_utils import update_order_patience
+from utils.order_utils import update_order_patience
 
 def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episodes=1000, grid_size=5, m=5):
     '''

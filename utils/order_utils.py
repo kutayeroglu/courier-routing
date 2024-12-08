@@ -1,7 +1,7 @@
 import random
 
-from helpers import manhattan_distance
-from order import Order
+from utils.general_utils import manhattan_distance
+from core.order import Order
 
 def assign_order_to_courier(order_list, courier):
     """

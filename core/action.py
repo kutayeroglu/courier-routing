@@ -1,4 +1,4 @@
-from order_utils import handle_rejected_order
+from utils.order_utils import handle_rejected_order
 
 # Take action and return the next state and reward
 def take_action(courier, action, order_list, m, grid_size=5):
