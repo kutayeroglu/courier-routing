@@ -7,6 +7,9 @@ from utils.order_utils import generate_orders
 from learning.qlearning import q_learning
 from utils.simulation_utils import simulate_couriers
 
+import logging
+from logger_config import setup_logging
+
 # Set random seed for reproducibility
 random.seed(42)
 
@@ -23,16 +26,26 @@ def main_simulation():
         to train just one courier for various grid sizes. The resulting policy is then
         used for each courier in the system.
     '''
+    setup_logging()
+
+    # Create logger for the main simulation
+    logger = logging.getLogger('MainSimulation')
+    logger.info("Starting the simulation.")
+
 
     for grid_size_total, num_couriers in simulation_parameters:
+        # TODO: Remove after validating single courier simulation
+        if num_couriers > 1: 
+            break
+
         grid_length = int(np.sqrt(grid_size_total))
         
         if grid_length ** 2 != grid_size_total:
-            print(f"Warning: Grid size {grid_size_total} is not a perfect square. Interpreting grid_length as {grid_length}.")
+            logger.warning(f"Grid size {grid_size_total} is not a perfect square. Interpreting grid_length as {grid_length}.")
 
         m = grid_length
 
-        print(f"\n=== Simulation for Grid Size: {grid_size_total} (Grid Length: {grid_length}x{grid_length}), Number of Couriers: {num_couriers} ===")
+        logger.info(f"\n=== Simulation for Grid Size: {grid_size_total} (Grid Length: {grid_length}x{grid_length}), Number of Couriers: {num_couriers} ===")
 
         # Initialize Q-table
         q_table = {}
@@ -44,14 +57,14 @@ def main_simulation():
         training_order_list = generate_orders(num_orders, grid_length, patience=10)
 
         # Train Q-learning for the current grid size
-        print(f"Training Q-learning for grid size {grid_size_total} with 1 courier...")
+        logger.info(f"Training Q-learning for grid size {grid_size_total} with 1 courier...")
         trained_q_table = q_learning(
             training_courier,
             training_order_list,
             q_table,
             gamma=0.9,
             epsilon=0.1,
-            max_episodes=1000,
+            max_episodes=100,
             grid_size=grid_length,
             m=m
         )
@@ -64,7 +77,7 @@ def main_simulation():
             # Generate a fresh set of orders for the simulation
             simulation_order_list = generate_orders(num_orders, grid_length, patience=10)
 
-            print(f"\nRunning simulation {simulation_run} with {num_couriers} courier(s) on grid size {grid_size_total}...")
+            logger.info(f"\nRunning simulation {simulation_run} with {num_couriers} courier(s) on grid size {grid_size_total}...")
             summary = simulate_couriers(
                 couriers,
                 simulation_order_list,
@@ -74,7 +87,7 @@ def main_simulation():
                 max_steps=100
             )
 
-            print(f"Simulation {simulation_run} Result: {summary}")
+            logger.info(f"Simulation {simulation_run} Result: {summary}")
 
 if __name__ == "__main__":
     main_simulation()

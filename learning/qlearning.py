@@ -1,3 +1,5 @@
+import logging
+
 from utils.order_utils import process_orders
 from learning.policy import epsilon_greedy
 from core.action import take_action
@@ -70,17 +72,17 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
             if timed_out_count > 0:
                 penalty = timed_out_count * m
                 total_reward -= penalty
-                print(f"Episode {episode + 1}, Step {step + 1}: Applied penalty for {timed_out_count} timed-out order(s): -{penalty}")
+                logging.debug(f"Episode {episode + 1}, Step {step + 1}: Applied penalty for {timed_out_count} timed-out order(s): -{penalty}")
 
             # Show the courier's action, location, reward, and Q-value at each step
             q_value = q_table.get((state, action), 0)
-            print(f"Episode {episode + 1}, Step {step + 1}: Action: {action}, Location: {courier.location}, Reward: {reward}, Q-value: {q_value}")
+            logging.debug(f"Episode {episode + 1}, Step {step + 1}: Action: {action}, Location: {courier.location}, Reward: {reward}, Q-value: {q_value}")
 
             # Check for terminal conditions (e.g., all orders delivered or timed out)
             if all(order.status in ['delivered', 'rejected', 'timed_out'] for order in order_list):
-                print(f"Episode {episode + 1}: All orders have been processed by step {step + 1}.")
+                logging.debug(f"Episode {episode + 1}: All orders have been processed by step {step + 1}.")
                 break
 
-        print(f"Episode {episode + 1}: Total reward: {total_reward}\n")
+        logging.debug(f"Episode {episode + 1}: Total reward: {total_reward}\n")
 
     return q_table

@@ -1,4 +1,5 @@
 import random
+import logging
 from core.order import Order
 from utils.order_utils import process_orders, update_order_patience
 from learning.policy import epsilon_greedy
@@ -71,7 +72,7 @@ def simulate_couriers(couriers, order_list, q_table, grid_size=5, m=5, max_steps
 
                 # Show the courier's action, location, reward, and Q-value at each step
                 q_value = q_table.get((state, action), 0)
-                print(f"Courier {idx + 1}, Step {step + 1}: Action: {action}, Location: {courier.location}, Reward: {reward}, Q-value: {q_value}")
+                logging.debug(f"Courier {idx + 1}, Step {step + 1}: Action: {action}, Location: {courier.location}, Reward: {reward}, Q-value: {q_value}")
 
         # Update order patience and apply penalties for timed-out orders
         timed_out_count = update_order_patience(order_list, m)
@@ -79,7 +80,7 @@ def simulate_couriers(couriers, order_list, q_table, grid_size=5, m=5, max_steps
             penalty = timed_out_count * m
             total_reward -= penalty
             timed_out_orders += timed_out_count
-            print(f"Applied penalty for {timed_out_count} timed-out order(s): -{penalty}")
+            logging.debug(f"Applied penalty for {timed_out_count} timed-out order(s): -{penalty}")
 
         # Collect statistics
         delivered_orders = sum(1 for order in order_list if order.status == 'delivered')
@@ -87,7 +88,7 @@ def simulate_couriers(couriers, order_list, q_table, grid_size=5, m=5, max_steps
 
         # Check for terminal conditions (e.g., all orders delivered or timed out)
         if all(order.status in ['delivered', 'rejected', 'timed_out'] for order in order_list):
-            print(f"All orders have been processed by step {step + 1}.")
+            logging.debug(f"All orders have been processed by step {step + 1}.")
             break
 
     summary = {
@@ -97,5 +98,5 @@ def simulate_couriers(couriers, order_list, q_table, grid_size=5, m=5, max_steps
         'Timed-out Orders': timed_out_orders
     }
 
-    print(f"\nSimulation Summary: {summary}")
+    logging.info(f"\nSimulation Summary: {summary}")
     return summary

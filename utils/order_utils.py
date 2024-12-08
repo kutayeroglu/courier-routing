@@ -1,4 +1,5 @@
 import random
+import logging
 
 from utils.general_utils import manhattan_distance
 from core.order import Order
@@ -40,7 +41,7 @@ def assign_order_to_courier(order_list, courier):
             courier.is_busy = True
             nearest_order.status = 'assigned'
             
-            print(f"Courier at {courier.location} assigned to order {nearest_order.origin} -> {nearest_order.destination}")
+            logging.debug(f"Courier at {courier.location} assigned to order {nearest_order.origin} -> {nearest_order.destination}")
 
 
 def handle_rejected_order(order, order_list):
@@ -59,10 +60,10 @@ def handle_rejected_order(order, order_list):
         order.assigned = False
         order.status = 'pending'
         order_list.append(order)  # Reassign
-        print(f"Order {order.origin} -> {order.destination} is back in the queue with patience {order.patience}.")
+        logging.debug(f"Order {order.origin} -> {order.destination} is back in the queue with patience {order.patience}.")
     else:
         order.status = 'rejected'
-        print(f"Order {order.origin} -> {order.destination} timed out.")
+        logging.debug(f"Order {order.origin} -> {order.destination} timed out.")
         order_list.remove(order)  # Remove from the system
 
 def process_orders(order_list, couriers):
@@ -99,7 +100,7 @@ def update_order_patience(order_list, m):
             if order.patience <= 0:
                 timed_out_orders.append(order)
                 timed_out_count += 1
-                print(f"Order {order.origin} -> {order.destination} timed out.")
+                logging.debug(f"Order {order.origin} -> {order.destination} timed out.")
 
     # Remove timed-out orders from the order list
     for order in timed_out_orders:

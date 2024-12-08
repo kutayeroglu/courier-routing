@@ -1,3 +1,5 @@
+import logging 
+
 from utils.order_utils import handle_rejected_order
 
 # Take action and return the next state and reward
@@ -53,7 +55,7 @@ def take_action(courier, action, order_list, m, grid_size=5):
           reward = -1 if courier.current_order else -0.1
       else:
           reward = -m  # Penalty for illegal movement
-          print("Illegal move: Cannot move up beyond grid boundaries.")
+          logging.debug("Illegal move: Cannot move up beyond grid boundaries.")
 
   elif action == 'down':
       if courier.location[1] > 0:
@@ -61,7 +63,7 @@ def take_action(courier, action, order_list, m, grid_size=5):
           reward = -1 if courier.current_order else -0.1
       else:
           reward = -m
-          print("Illegal move: Cannot move down beyond grid boundaries.")
+          logging.debug("Illegal move: Cannot move down beyond grid boundaries.")
 
   elif action == 'left':
       if courier.location[0] > 0:
@@ -69,7 +71,7 @@ def take_action(courier, action, order_list, m, grid_size=5):
           reward = -1 if courier.current_order else -0.1
       else:
           reward = -m
-          print("Illegal move: Cannot move left beyond grid boundaries.")
+          logging.debug("Illegal move: Cannot move left beyond grid boundaries.")
 
   elif action == 'right':
       if courier.location[0] < grid_size - 1:
@@ -77,7 +79,7 @@ def take_action(courier, action, order_list, m, grid_size=5):
           reward = -1 if courier.current_order else -0.1
       else:
           reward = -m
-          print("Illegal move: Cannot move right beyond grid boundaries.")
+          logging.debug("Illegal move: Cannot move right beyond grid boundaries.")
 
 
   elif action == 'pick-up':
@@ -91,11 +93,11 @@ def take_action(courier, action, order_list, m, grid_size=5):
           else:
               # Illegal pick-up (already assigned)
               reward = -m
-              print("Illegal action: Attempted to pick up an already assigned order.")
+              logging.debug("Illegal action: Attempted to pick up an already assigned order.")
       else:
           # Illegal pick-up (no order at location)
           reward = -m
-          print("Illegal action: No order to pick up at current location.")
+          logging.debug("Illegal action: No order to pick up at current location.")
 
   elif action == 'deliver':
       if courier.current_order and courier.location == courier.current_order.destination:
@@ -109,13 +111,13 @@ def take_action(courier, action, order_list, m, grid_size=5):
       else:
           # Illegal delivery
           reward = -m
-          print("Illegal action: No order to deliver at current location or wrong destination.")
+          logging.debug("Illegal action: No order to deliver at current location or wrong destination.")
 
   elif action == 'stay':
       if courier.current_order:
           # Penalty for staying while carrying an order
           reward = -m
-          print("Penalty: Stayed while carrying an order.")
+          logging.debug("Penalty: Stayed while carrying an order.")
       else:
           # No reward or penalty for staying idle without an order
           reward = 0
@@ -125,10 +127,10 @@ def take_action(courier, action, order_list, m, grid_size=5):
           # Determine context for penalty differentiation
           if courier.is_busy:
               penalty = m  # Larger penalty for rejecting while delivering
-              print("Penalty: Rejected while delivering an order.")
+              logging.debug("Penalty: Rejected while delivering an order.")
           else:
               penalty = m / 2  # Smaller penalty for rejecting right after assignment
-              print("Penalty: Rejected right after order assignment.")
+              logging.debug("Penalty: Rejected right after order assignment.")
           handle_rejected_order(courier.current_order, order_list)
           reward = -penalty
           courier.is_busy = False
@@ -136,12 +138,12 @@ def take_action(courier, action, order_list, m, grid_size=5):
       else:
           # Penalty for rejecting without an assigned order
           reward = -m / 2  # Minimal penalty
-          print("Penalty: Rejected when no order is assigned.")
+          logging.debug("Penalty: Rejected when no order is assigned.")
 
   else:
       # Handle invalid actions
       reward = -m
-      print(f"Invalid action '{action}' taken.")
+      logging.debug(f"Invalid action '{action}' taken.")
 
   # Get next state
   next_state = (
