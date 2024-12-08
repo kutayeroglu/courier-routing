@@ -1,12 +1,13 @@
 import logging
 
-from utils.order_utils import process_orders
-from learning.policy import epsilon_greedy
-from core.action import take_action
 from constants import actions
-from utils.order_utils import update_order_patience
+from core.action import take_action
+from learning.policy import epsilon_greedy
+from utils.general_utils import plot_and_save_graphs
+from utils.order_utils import process_orders, update_order_patience
 
-def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episodes=1000, grid_size=5, m=5):
+
+def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episodes=1000, grid_size=5, m=5, num_couriers=1, courier_name='Courier'):
     '''
     Trains a courier agent using the Q-learning algorithm.
 
@@ -26,8 +27,12 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
     assert 0 <= gamma <= 1, "Discount factor (gamma) must be between 0 and 1"
     assert 0 <= epsilon <= 1, "Exploration rate (epsilon) must be between 0 and 1"
 
+    episode_lengths = []
+    episode_rewards = []
+
     for episode in range(max_episodes):
         total_reward = 0
+        episode_length = 0
 
         # Reset courier's state
         courier.is_busy = False
@@ -43,7 +48,9 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
         process_orders(order_list, [courier])
 
         # Loop over time steps in the episode
-        for step in range(100):  # max steps per episode
+        for step in range(1, 101):  # max steps per episode
+            episode_length += 1
+
             # Get the current state
             state = (
                 courier.location,
@@ -85,4 +92,7 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
 
         logging.debug(f"Episode {episode + 1}: Total reward: {total_reward}\n")
 
+    # Plot and save the graphs after training
+    plot_and_save_graphs(episode_lengths, episode_rewards, str(grid_size), str(num_couriers))
+    
     return q_table

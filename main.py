@@ -66,7 +66,8 @@ def main_simulation():
             epsilon=0.1,
             max_episodes=episode_number,
             grid_size=grid_length,
-            m=m
+            m=m,
+            num_couriers=num_couriers
         )
 
         # Now, run simulations with the trained Q-table

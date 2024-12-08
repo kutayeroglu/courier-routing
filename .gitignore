@@ -1,3 +1,4 @@
 courier-routing-venv/
 __pycache__/
 logs/
+plots/
