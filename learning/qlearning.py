@@ -90,6 +90,10 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
                 logging.debug(f"Episode {episode + 1}: All orders have been processed by step {step + 1}.")
                 break
 
+        # Save episode data for plotting
+        episode_lengths.append(episode_length)
+        episode_rewards.append(total_reward)
+
         logging.debug(f"Episode {episode + 1}: Total reward: {total_reward}\n")
 
     # Plot and save the graphs after training
