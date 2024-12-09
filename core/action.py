@@ -80,7 +80,7 @@ def take_action(courier, action, order_list, m=5):
                 courier.current_order.status = 'in_transit'
             else:
                 # Illegal pick-up (already assigned)
-                reward = -m
+                reward = -m ** 2
                 logging.debug("Illegal action: Attempted to pick up an already assigned order.")
         else:
             # Illegal pick-up (no order at location)
@@ -98,7 +98,7 @@ def take_action(courier, action, order_list, m=5):
             courier.current_order = None
         else:
             # Illegal delivery
-            reward = -m
+            reward = -m ** 2
             logging.debug("Illegal action: No order to deliver at current location or wrong destination.")
 
     elif action == 'stay':
