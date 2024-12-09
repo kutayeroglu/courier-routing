@@ -80,7 +80,7 @@ def take_action(courier, action, order_list, m=5):
                 courier.current_order.status = 'in_transit'
             else:
                 # Illegal pick-up (already assigned)
-                reward = -m ** 2
+                reward = -(m ** 2)
                 logging.debug("Illegal action: Attempted to pick up an already assigned order.")
         else:
             # Illegal pick-up (no order at location)
@@ -98,40 +98,30 @@ def take_action(courier, action, order_list, m=5):
             courier.current_order = None
         else:
             # Illegal delivery
-            reward = -m ** 2
+            reward = -(m ** 2)
             logging.debug("Illegal action: No order to deliver at current location or wrong destination.")
 
     elif action == 'stay':
         if courier.current_order:
             # Penalty for staying while carrying an order
-            reward = -m
+            reward = -(m ** 2)
             logging.debug("Penalty: Stayed while carrying an order.")
         else:
             # No reward or penalty for staying idle without an order
             reward = 0
 
     elif action == 'reject':
-        if courier.current_order:
-            # Determine context for penalty differentiation
-            if courier.is_busy:
-                penalty = m  # Larger penalty for rejecting while delivering
-                logging.debug("Penalty: Rejected while delivering an order.")
-            else:
-                penalty = m / 2  # Smaller penalty for rejecting right after assignment
-                logging.debug("Penalty: Rejected right after order assignment.")
-            handle_rejected_order(courier.current_order, order_list)
-            reward = -penalty
-            courier.is_busy = False
-            courier.current_order = None
+        # Determine context for penalty differentiation
+        if courier.is_busy:
+            reward = -(m **2)   # Larger penalty for rejecting while delivering
+            logging.debug("Penalty: Rejected while delivering an order.")
         else:
-            # Penalty for rejecting without an assigned order
-            reward = -m / 2  # Minimal penalty
-            logging.debug("Penalty: Rejected when no order is assigned.")
-
-    else:
-        # Handle invalid actions
-        reward = -m
-        logging.debug(f"Invalid action '{action}' taken.")
+            reward = -m / 3  # Smaller penalty for rejecting right after assignment
+            logging.debug("Penalty: Rejected right after order assignment.")
+        handle_rejected_order(courier.current_order, order_list)
+        # reward = -penalty
+        courier.is_busy = False
+        courier.current_order = None
 
     # Get next state
     next_state = (
