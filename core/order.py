@@ -14,5 +14,4 @@ class Order:
         self.origin = origin  # (x, y)
         self.destination = destination  # (x, y)
         self.patience = patience
-        self.assigned = False
-        self.status = 'pending'  # 'pending', 'in_transit', 'delivered', 'rejected'
+        self.status = 'pending'  # 'pending', 'in_transit', 'assigned'

@@ -19,7 +19,7 @@ def assign_order_to_courier(order_list, courier):
     """
     if not courier.is_busy:
         # Find the nearest unassigned order
-        unassigned_orders = [order for order in order_list if not order.assigned]
+        unassigned_orders = [order for order in order_list if not order.status == 'assigned']
         if unassigned_orders:
             # Shuffle to randomize order among identical sorting keys
             random.shuffle(unassigned_orders)
@@ -39,34 +39,11 @@ def assign_order_to_courier(order_list, courier):
 
             # Assign the order to the courier
             courier.current_order = nearest_order
-            nearest_order.assigned = True
             courier.is_busy = True
             nearest_order.status = 'assigned'
             
             logging.debug(f"Courier at {courier.location} assigned to order {nearest_order.origin} -> {nearest_order.destination}")
-
-
-def handle_rejected_order(order, order_list):
-    """
-    Handles the rejection of an order by a courier.
-
-    Parameters:
-    - order (Order): The order being rejected.
-    - order_list (list): The list of Order objects in the system.
-
-    Returns:
-    - None
-    """
-    order.patience -= 1  # Decrement patience
-    if order.patience > 0:
-        order.assigned = False
-        order.status = 'pending'
-        order_list.append(order)  # Reassign
-        logging.debug(f"Order {order.origin} -> {order.destination} is back in the queue with patience {order.patience}.")
-    else:
-        order.status = 'rejected'
-        logging.debug(f"Order {order.origin} -> {order.destination} timed out.")
-        order_list.remove(order)  # Remove from the system
+        
 
 def process_orders(order_list, couriers):
     """
@@ -82,32 +59,29 @@ def process_orders(order_list, couriers):
     for courier in couriers:
         assign_order_to_courier(order_list, courier)
 
-def update_order_patience(order_list, m):
+def update_order_patience(order_list):
     """
     Updates the patience of each order and applies penalties for timed-out orders.
 
     Parameters:
     - order_list (list): List of Order objects.
-    - m (float/int): Penalty value proportional to grid size.
 
     Returns:
     - timed_out_count (int): Number of orders that have timed out.
     """
     timed_out_orders = []
-    timed_out_count = 0  # Initialize counter
+    timed_out_count = 0
 
     for order in order_list:
-        if not order.assigned:
-            order.patience -= 1
-            if order.patience <= 0:
-                timed_out_orders.append(order)
-                timed_out_count += 1
-                logging.debug(f"Order {order.origin} -> {order.destination} timed out.")
+        order.patience -= 1
+        if order.patience <= 0:
+            timed_out_orders.append(order)
+            timed_out_count += 1
+            logging.debug(f"Order {order.origin} -> {order.destination} timed out.")
 
     # Remove timed-out orders from the order list
     for order in timed_out_orders:
-        order.status = 'timed_out'
-        order_list.remove(order)  # Remove from the system
+        order_list.remove(order)
 
     return timed_out_count
 

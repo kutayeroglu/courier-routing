@@ -21,14 +21,23 @@ actions = ['up', 'down', 'left', 'right', 'pick-up', 'deliver', 'stay', 'reject'
 
 # Define simulation parameters: (grid_size_total, number_of_couriers, episode_number)
 simulation_parameters = [
-    (9, 1, 1000),
-    (9, 2, 1000),
+    # (9, 1, 1000),
+    # (9, 2, 1000),
     (25, 1, 2000),
-    (25, 2, 2000),
-    (64, 1, 4000),
-    (64, 2, 4000)
+    # (25, 2, 2000),
+    # (64, 1, 4000),
+    # (64, 2, 4000)
 ]
 
 
 # Number of orders per simulation
 num_orders = 10
+
+
+# dx, dy for directions
+movement = {
+    'up': (0, 1),
+    'down': (0, -1),
+    'left': (-1, 0),
+    'right': (1, 0)
+}

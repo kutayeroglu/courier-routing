@@ -1,5 +1,5 @@
 import logging 
-from utils.order_utils import handle_rejected_order
+from constants import movement
 
 # Take action and return the next state and reward
 def take_action(courier, action, order_list, m=5):
@@ -48,12 +48,10 @@ def take_action(courier, action, order_list, m=5):
 
     # Movement actions
     if action in ['up', 'down', 'left', 'right']:
-        movement = {
-            'up': (0, 1),
-            'down': (0, -1),
-            'left': (-1, 0),
-            'right': (1, 0)
-        }
+        # Change order status if courier starts moving after assignment
+        if courier.current_order and courier.current_order.status == 'assigned':
+                courier.current_order.status = 'in_transit'
+
         dx, dy = movement[action]
         new_x = courier.location[0] + dx
         new_y = courier.location[1] + dy
@@ -69,6 +67,9 @@ def take_action(courier, action, order_list, m=5):
             # Invalid move; do not move courier, assign a smaller penalty instead of -m
             reward = -0.5
             logging.debug(f"Courier attempted to move '{action}' out of bounds. Reward: {reward}")
+
+
+
 
     elif action == 'pick-up':
         if courier.current_order and courier.location == courier.current_order.origin:
@@ -92,7 +93,6 @@ def take_action(courier, action, order_list, m=5):
             # Successful delivery
             reward = m ** 2  # Positive reward proportional to grid size
             courier.is_busy = False
-            courier.current_order.status = 'delivered'
             if courier.current_order in order_list:
                 order_list.remove(courier.current_order)
             courier.current_order = None
@@ -111,17 +111,27 @@ def take_action(courier, action, order_list, m=5):
             reward = 0
 
     elif action == 'reject':
-        # Determine context for penalty differentiation
-        if courier.is_busy:
-            reward = -(m **2)   # Larger penalty for rejecting while delivering
-            logging.debug("Penalty: Rejected while delivering an order.")
-        else:
-            reward = -m / 3  # Smaller penalty for rejecting right after assignment
-            logging.debug("Penalty: Rejected right after order assignment.")
-        handle_rejected_order(courier.current_order, order_list)
-        # reward = -penalty
-        courier.is_busy = False
-        courier.current_order = None
+        if not courier.current_order:
+            reward = -m / 3
+
+        else: 
+            # Reject in transit (order assigned, moved then rejected)
+            if courier.current_order.status == 'in_transit':
+                reward = -(m ** 2)
+                logging.debug("Penalty: Rejected while delivering an order.")
+
+            # Reject at beginning (order assigned, didn't move and rejected)
+            if courier.current_order.status == 'assigned':
+                reward = -m / 3
+                logging.debug("Penalty: Rejected right after order assignment.")
+
+            # Put order back in the waiting list
+            courier.current_order.status = 'pending' 
+            
+            # Update courier status 
+            courier.is_busy = False
+            courier.current_order = None
+
 
     # Get next state
     next_state = (

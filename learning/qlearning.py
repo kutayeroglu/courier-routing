@@ -29,7 +29,7 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
     episode_lengths = []
     episode_rewards = []
 
-    for episode in range(max_episodes):
+    for episode in range(1, max_episodes + 1):
         total_reward = 0
         episode_length = 0
 
@@ -40,7 +40,6 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
 
         # Reset orders
         for order in order_list:
-            order.assigned = False
             order.status = 'pending'
 
         # Assign orders at the start of the episode
@@ -75,18 +74,14 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
             total_reward += reward
 
             # Update order patience and apply penalties for timed-out orders
-            timed_out_count = update_order_patience(order_list, m)
+            timed_out_count = update_order_patience(order_list)
             if timed_out_count > 0:
                 penalty = timed_out_count * m
                 total_reward -= penalty
                 logging.debug(f"Episode {episode + 1}, Step {step + 1}: Applied penalty for {timed_out_count} timed-out order(s): -{penalty}")
 
-            # Show the courier's action, location, reward, and Q-value at each step
-            q_value = q_table.get((state, action), 0)
-            logging.debug(f"Episode {episode + 1}, Step {step + 1}: Action: {action}, Location: {courier.location}, Reward: {reward}, Q-value: {q_value}")
-
             # Check for terminal conditions (e.g., all orders delivered or timed out)
-            if all(order.status in ['delivered', 'rejected', 'timed_out'] for order in order_list):
+            if len(order_list) == 0:
                 logging.debug(f"Episode {episode + 1}: All orders have been processed by step {step + 1}.")
                 break
 
