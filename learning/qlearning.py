@@ -7,7 +7,7 @@ from utils.general_utils import plot_and_save_graphs
 from utils.order_utils import process_orders, update_order_patience
 
 
-def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episodes=1000, grid_size=5, m=5, num_couriers=1, learning_rate=0.1):
+def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episodes=1000, m=5, learning_rate=0.1):
     '''
     Trains a courier agent using the Q-learning algorithm.
 
@@ -18,7 +18,6 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
     - gamma (float): Discount factor for future rewards.
     - epsilon (float): Exploration rate for the epsilon-greedy policy.
     - max_episodes (int): Number of training episodes.
-    - grid_size (int): Size of the grid (assuming square grid).
     - m (int/float): Parameter controlling reward magnitudes, proportional to grid size.
 
     Returns:
@@ -62,7 +61,7 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
             action = epsilon_greedy(state, q_table, epsilon)
 
             # Execute the action and observe the next state and reward
-            next_state, reward = take_action(courier, action, order_list, m, grid_size)
+            next_state, reward = take_action(courier, action, order_list)
 
             # Update Q-value using Bellman equation with learning rate
             future_q_values = [q_table.get((next_state, a), 0) for a in actions]
@@ -98,6 +97,6 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
         logging.debug(f"Episode {episode + 1}: Total reward: {total_reward}\n")
 
     # Plot and save the graphs after training
-    plot_and_save_graphs(episode_lengths, episode_rewards, str(grid_size), str(num_couriers))
+    plot_and_save_graphs(episode_lengths, episode_rewards, str(m))
     
     return q_table

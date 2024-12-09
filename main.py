@@ -45,7 +45,7 @@ def main_simulation():
 
         m = grid_length
 
-        logger.info(f"\n=== Simulation for Grid Size: {grid_size_total} (Grid Length: {grid_length}x{grid_length}), Number of Couriers: {num_couriers} ===")
+        logger.info(f"\n=== Simulation for Grid Size: {grid_size_total} (Grid Length: {m}x{m}), Number of Couriers: {num_couriers} ===")
 
         # Initialize Q-table
         q_table = {}
@@ -54,7 +54,7 @@ def main_simulation():
         training_courier = Courier((0, 0))  # Starting at (0,0)
 
         # Generate orders for training
-        training_order_list = generate_orders(num_orders, grid_length, patience=10)
+        training_order_list = generate_orders(num_orders, m, patience=10)
 
         # Train Q-learning for the current grid size
         logger.info(f"Training Q-learning for grid size {grid_size_total} with 1 courier...")
@@ -65,9 +65,7 @@ def main_simulation():
             gamma=0.9,
             epsilon=0.1,
             max_episodes=episode_number,
-            grid_size=grid_length,
             m=m,
-            num_couriers=num_couriers
         )
 
         # Now, run simulations with the trained Q-table
@@ -76,14 +74,14 @@ def main_simulation():
             couriers = [Courier((0, 0)) for _ in range(num_couriers)]  # All start at (0,0)
 
             # Generate a fresh set of orders for the simulation
-            simulation_order_list = generate_orders(num_orders, grid_length, patience=10)
+            simulation_order_list = generate_orders(num_orders, m, patience=10)
 
             logger.info(f"\nRunning simulation {simulation_run} with {num_couriers} courier(s) on grid size {grid_size_total}...")
             summary = simulate_couriers(
                 couriers,
                 simulation_order_list,
                 trained_q_table,
-                grid_size=grid_length,
+                grid_size=m,
                 m=m,
                 max_steps=100
             )

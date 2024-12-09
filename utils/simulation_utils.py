@@ -66,7 +66,7 @@ def simulate_couriers(couriers, order_list, q_table, grid_size=5, m=5, max_steps
                 action = epsilon_greedy(state, q_table, epsilon=0)
 
                 # Execute the action and observe the next state and reward
-                next_state, reward = take_action(courier, action, order_list, m, grid_size)
+                next_state, reward = take_action(courier, action, order_list, m)
 
                 total_reward += reward
 
