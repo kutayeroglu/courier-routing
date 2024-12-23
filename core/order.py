@@ -10,7 +10,7 @@ class Order:
       practice where each customer typically has patience level and leaves
       the system if he/she is not served within certain amount of time.
     '''
-    def __init__(self, origin, destination, patience=10):
+    def __init__(self, origin, destination, patience):
         self.origin = origin  # (x, y)
         self.destination = destination  # (x, y)
         self.patience = patience

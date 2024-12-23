@@ -65,19 +65,16 @@ def take_action(courier, action, order_list, m=5):
             logging.debug(f"Courier moved {action} to {courier.location}. Reward: {reward}")
         else:
             # Invalid move; do not move courier, assign a smaller penalty instead of -m
-            reward = -0.5
+            reward = -(m**2)
             logging.debug(f"Courier attempted to move '{action}' out of bounds. Reward: {reward}")
-
-
 
 
     elif action == 'pick-up':
         if courier.current_order and courier.location == courier.current_order.origin:
-            if not courier.current_order.assigned:
+            if not courier.current_order.status == 'assigned':
                 # Successful pick-up
                 reward = m ** 2  # Positive reward proportional to grid size
                 courier.is_busy = True
-                courier.current_order.assigned = True
                 courier.current_order.status = 'in_transit'
             else:
                 # Illegal pick-up (already assigned)
@@ -85,8 +82,9 @@ def take_action(courier, action, order_list, m=5):
                 logging.debug("Illegal action: Attempted to pick up an already assigned order.")
         else:
             # Illegal pick-up (no order at location)
-            reward = -m
+            reward = -(m**2)
             logging.debug("Illegal action: No order to pick up at current location.")
+
 
     elif action == 'deliver':
         if courier.current_order and courier.location == courier.current_order.destination:
@@ -101,6 +99,7 @@ def take_action(courier, action, order_list, m=5):
             reward = -(m ** 2)
             logging.debug("Illegal action: No order to deliver at current location or wrong destination.")
 
+
     elif action == 'stay':
         if courier.current_order:
             # Penalty for staying while carrying an order
@@ -109,6 +108,7 @@ def take_action(courier, action, order_list, m=5):
         else:
             # No reward or penalty for staying idle without an order
             reward = 0
+
 
     elif action == 'reject':
         if not courier.current_order:
@@ -141,3 +141,36 @@ def take_action(courier, action, order_list, m=5):
     )
 
     return next_state, reward
+
+
+def get_illegal_actions(state, grid_length):
+    """
+    Determine the set of legal actions based on the current state.
+
+    Parameters:
+    - state: Tuple containing (location, current_order_origin, current_order_destination)
+    - actions: List of all possible actions
+
+    Returns:
+    - List of legal actions
+    """
+    courier_location, _, _ = state
+    illegal_actions = []
+
+    # Extract courier's current position
+    x, y = courier_location
+
+    # Define movement boundaries (assuming grid size m x m)
+    m = grid_length
+
+    # Movement actions
+    if x == 0:
+        illegal_actions.append('left')
+    if x == m - 1:
+        illegal_actions.append('right')
+    if y == m-1:
+        illegal_actions.append('up')
+    if y == 0:
+        illegal_actions.append('down')
+
+    return illegal_actions

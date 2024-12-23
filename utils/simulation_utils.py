@@ -2,8 +2,10 @@ import random
 import logging
 from core.order import Order
 from utils.order_utils import process_orders, update_order_patience
+from utils.general_utils import plot_and_save_graphs
 from learning.policy import epsilon_greedy
 from core.action import take_action
+from constants import patience_scale, max_num_orders
 
 
 def generate_orders(num_orders, grid_length, patience=10):
@@ -28,15 +30,14 @@ def generate_orders(num_orders, grid_length, patience=10):
     return orders
 
 
-def simulate_couriers(couriers, order_list, q_table, grid_size=5, m=5, max_steps=100):
+def simulate_couriers(couriers, order_list, q_table, m=5, max_steps=100):
     '''
     Simulates the actions of multiple couriers using the trained Q-table.
 
-    Parameters:
+    Parameters:7z\
     - couriers: A list of Courier instances.
     - order_list: A list of Order objects.
     - q_table: The trained Q-table.
-    - grid_size (int): Size of the grid (assuming square grid).
     - m (int/float): Parameter controlling reward magnitudes, proportional to grid size.
     - max_steps (int): Maximum number of steps in the simulation.
 
@@ -44,59 +45,69 @@ def simulate_couriers(couriers, order_list, q_table, grid_size=5, m=5, max_steps
     - summary: Dictionary containing summary statistics.
     '''
     total_reward = 0
-    delivered_orders = 0
-    rejected_orders = 0
-    timed_out_orders = 0
-    initial_num_orders = len(order_list)
+    # delivered_orders = 0
+    # rejected_orders = 0
+    # timed_out_orders = 0
+    # initial_num_orders = len(order_list)
+    episode_rewards = []
+    episode_lengths = []
+    courier = couriers
 
-    for step in range(max_steps):
-        # Assign orders to couriers if they are not busy
-        process_orders(order_list, couriers)
+    for episode in range(1, 101):
+        total_reward = 0
 
-        for idx, courier in enumerate(couriers):
-            if not courier.is_busy and courier.current_order is None:
-                # Get the current state
-                state = (
-                    courier.location,
-                    courier.current_order.origin if courier.current_order else None,
-                    courier.current_order.destination if courier.current_order else None
-                )
+        # Reset courier's state
+        courier.is_busy = False
+        courier.current_order = None
+        courier.location = (0, 0)
 
-                # Choose an action using the epsilon-greedy policy with epsilon=0 (pure exploitation)
-                action = epsilon_greedy(state, q_table, epsilon=0)
+        # Reset orders
+        order_list = generate_orders(max_num_orders, m, patience=patience_scale*m)
 
-                # Execute the action and observe the next state and reward
-                next_state, reward = take_action(courier, action, order_list, m)
+        # Assign orders at the start of the episode
+        process_orders(order_list, [courier])
 
-                total_reward += reward
+        for step in range(max_steps):
+            # Check for terminal conditions (e.g., all orders delivered or timed out)
+            if len(order_list) == 0:
+                logging.debug(f"All orders have been processed.")
+                # order_list = generate_orders(num_orders, m, patience=patience_scale*m)
+                episode_rewards.append(total_reward)
+                break
 
-                # Show the courier's action, location, reward, and Q-value at each step
-                q_value = q_table.get((state, action), 0)
-                logging.debug(f"Courier {idx + 1}, Step {step + 1}: Action: {action}, Location: {courier.location}, Reward: {reward}, Q-value: {q_value}")
+            # Get the current state
+            state = (
+                courier.location,
+                courier.current_order.origin if courier.current_order else None,
+                courier.current_order.destination if courier.current_order else None
+            )
 
-        # Update order patience and apply penalties for timed-out orders
-        timed_out_count = update_order_patience(order_list, m)
-        if timed_out_count > 0:
-            penalty = timed_out_count * m
-            total_reward -= penalty
-            timed_out_orders += timed_out_count
-            logging.debug(f"Applied penalty for {timed_out_count} timed-out order(s): -{penalty}")
+            # Choose an action using the epsilon-greedy policy with epsilon=0 (pure exploitation)
+            action = epsilon_greedy(state, q_table, epsilon=0)
 
-        # Collect statistics
-        delivered_orders = sum(1 for order in order_list if order.status == 'delivered')
-        rejected_orders = sum(1 for order in order_list if order.status == 'rejected')
+            # Execute the action and observe the next state and reward
+            _, reward = take_action(courier, action, order_list, m)
 
-        # Check for terminal conditions (e.g., all orders delivered or timed out)
-        if all(order.status in ['delivered', 'rejected', 'timed_out'] for order in order_list):
-            logging.debug(f"All orders have been processed by step {step + 1}.")
-            break
+            total_reward += reward
+
+            # Show the courier's action, location, reward, and Q-value at each step
+            # q_value = q_table.get((state, action), 0)
+            # logging.debug(f"Courier {idx + 1}, Step {step + 1}: Action: {action}, Location: {courier.location}, Reward: {reward}, Q-value: {q_value}")
+
+            # Update order patience and apply penalties for timed-out orders
+            timed_out_count = update_order_patience(order_list)
+            if timed_out_count > 0:
+                penalty = timed_out_count * m
+                total_reward -= penalty
+        
+
+        
+
+    plot_and_save_graphs(episode_lengths, episode_rewards, str(m))
+
 
     summary = {
         'Total Reward': total_reward,
-        'Delivered Orders': delivered_orders,
-        'Rejected Orders': rejected_orders,
-        'Timed-out Orders': timed_out_orders
     }
 
-    logging.info(f"\nSimulation Summary: {summary}")
     return summary

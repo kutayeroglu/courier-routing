@@ -1,13 +1,21 @@
 import logging
 
-from constants import actions
 from core.action import take_action
+from core.courier import Courier
 from learning.policy import epsilon_greedy
+
+from constants import actions, max_num_orders, patience_scale
 from utils.general_utils import plot_and_save_graphs
-from utils.order_utils import process_orders, update_order_patience
+from utils.order_utils import process_orders, update_order_patience, generate_orders
 
 
-def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episodes=1000, m=5, learning_rate=0.1):
+def q_learning(gamma=0.95,
+               epsilon=0.5,
+               max_episodes=2000,
+               m=5,
+               learning_rate=0.6,
+               initial_num_orders=1,
+               order_generation_interval=25):
     '''
     Trains a courier agent using the Q-learning algorithm.
 
@@ -26,27 +34,45 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
     assert 0 <= gamma <= 1, "Discount factor (gamma) must be between 0 and 1"
     assert 0 <= epsilon <= 1, "Exploration rate (epsilon) must be between 0 and 1"
 
+    q_table = {}
     episode_lengths = []
     episode_rewards = []
+    min_lr = 0.01
 
     for episode in range(1, max_episodes + 1):
+        decay_rate = (learning_rate - min_lr) / max_episodes
+        current_lr = max(learning_rate - decay_rate * episode, min_lr)
+
         total_reward = 0
         episode_length = 0
+        num_orders_created = 0
 
-        # Reset courier's state
-        courier.is_busy = False
-        courier.current_order = None
-        courier.location = (0, 0)  # Reset to starting location
+        # Initialize/reset courier
+        courier = Courier((0, 0))
 
         # Reset orders
-        for order in order_list:
-            order.status = 'pending'
+        order_list = generate_orders(initial_num_orders, m, patience=patience_scale*m)
+        num_orders_created += initial_num_orders
 
         # Assign orders at the start of the episode
         process_orders(order_list, [courier])
 
+        epsilon = max(epsilon - 0.002, 0.01)  # Decay epsilon
+
+        max_step_size = (order_generation_interval * max_num_orders) + (patience_scale * m)
         # Loop over time steps in the episode
-        for step in range(1, 101):  # max steps per episode
+        for step in range(1, max_step_size):
+            if step % order_generation_interval == 0:
+                new_order = generate_orders(1, m, patience=patience_scale*m)
+                num_orders_created += 1
+                order_list.extend(new_order)
+
+            # Check for terminal conditions (e.g., all orders delivered or timed out)
+            if len(order_list) == 0 and num_orders_created == max_num_orders:
+                logging.debug(f"All orders have been processed, generating new orders...")
+                # order_list = generate_orders(num_orders, m, patience=patience_scale*m)
+                break
+
             episode_length += 1
 
             # Get the current state
@@ -61,29 +87,24 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
 
             # Execute the action and observe the next state and reward
             next_state, reward = take_action(courier, action, order_list)
+            total_reward += reward
 
             # Update Q-value using Bellman equation with learning rate
             future_q_values = [q_table.get((next_state, a), 0) for a in actions]
             future_q_value = max(future_q_values) if future_q_values else 0
             current_q = q_table.get((state, action), 0)
-            new_q_value = (1 - learning_rate) * current_q + learning_rate * (reward + gamma * future_q_value)
+            new_q_value = ((1 - current_lr) * current_q) + (learning_rate * (reward + gamma * future_q_value))
+            # new_q_value = reward + gamma * future_q_value
 
             # Update the Q-table
-            q_table[(state, action)] = round(new_q_value, 2)
-
-            total_reward += reward
+            q_table[(state, action)] = new_q_value
 
             # Update order patience and apply penalties for timed-out orders
             timed_out_count = update_order_patience(order_list)
             if timed_out_count > 0:
-                penalty = timed_out_count * m
+                penalty = timed_out_count * (m**3)
                 total_reward -= penalty
                 logging.debug(f"Episode {episode + 1}, Step {step + 1}: Applied penalty for {timed_out_count} timed-out order(s): -{penalty}")
-
-            # Check for terminal conditions (e.g., all orders delivered or timed out)
-            if len(order_list) == 0:
-                logging.debug(f"Episode {episode + 1}: All orders have been processed by step {step + 1}.")
-                break
 
         # Save episode data for plotting
         episode_lengths.append(episode_length)
@@ -92,6 +113,6 @@ def q_learning(courier, order_list, q_table, gamma=0.9, epsilon=0.1, max_episode
         logging.debug(f"Episode {episode + 1}: Total reward: {total_reward}\n")
 
     # Plot and save the graphs after training
-    plot_and_save_graphs(episode_lengths, episode_rewards, str(m))
+    plot_and_save_graphs(episode_lengths, episode_rewards, str(m), simulation_run=False)
     
     return q_table

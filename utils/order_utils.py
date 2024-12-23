@@ -43,6 +43,7 @@ def assign_order_to_courier(order_list, courier):
             nearest_order.status = 'assigned'
             
             logging.debug(f"Courier at {courier.location} assigned to order {nearest_order.origin} -> {nearest_order.destination}")
+            logging.debug(f"Initial order patience is: {nearest_order.patience}")
         
 
 def process_orders(order_list, couriers):
@@ -124,7 +125,7 @@ def generate_origin_destination_probs(grid_length):
     return origin_prob, destination_prob
 
 
-def generate_orders(num_orders, grid_length, patience=10):
+def generate_orders(num_orders, grid_length, patience):
     """
     Generates a specified number of orders with random origins and destinations based on varying grid cell probabilities.
     

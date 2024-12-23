@@ -31,8 +31,7 @@ simulation_parameters = [
 
 
 # Number of orders per simulation
-num_orders = 10
-
+max_num_orders = 5 
 
 # dx, dy for directions
 movement = {
@@ -41,3 +40,6 @@ movement = {
     'left': (-1, 0),
     'right': (1, 0)
 }
+
+# Initial patience of orders will be set to patience_scale * grid_length
+patience_scale = 5
