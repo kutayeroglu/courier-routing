@@ -1,4 +1,5 @@
-courier-routing-venv/
+*venv/
 __pycache__/
 logs/
 plots/
+*.png
